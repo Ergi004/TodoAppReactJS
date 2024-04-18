@@ -1,0 +1,21 @@
+CREATE DATABASE IF NOT EXISTS TodoApp;
+CREATE USER IF NOT EXISTS "Ergi"@"localhost" IDENTIFIED BY "1234";
+GRANT ALL PRIVILEGES ON TodoApp.* TO "Ergi"@"localhost";
+
+USE TodoApp;
+
+CREATE TABLE IF NOT EXISTS User (
+    user_id VARCHAR(256) PRIMARY KEY , 
+    user_name VARCHAR(256) ,
+    email VARCHAR(256) NOT NULL,
+    password VARCHAR(256) NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS Todos (
+    todo_id INT  PRIMARY KEY AUTO_INCREMENT,
+    user_id VARCHAR(256),
+    task_name VARCHAR(256),
+    description TEXT,
+    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN  KEY (user_id) REFERENCES User(user_id)
+);
