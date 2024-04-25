@@ -1,6 +1,13 @@
 import { RequestHandler } from "express";
-import { Todos, User } from "../models/models";
+import {
+  Todo,
+  UpdateTodo,
+  DeleteTodo,
+  ITodoByUserId,
+  CreateTodo,
+} from "../models/models";
 import db from "../config/db";
+import { todo } from "node:test";
 
 export const getAllTodos: RequestHandler = async (req, res) => {
   try {
@@ -12,30 +19,42 @@ export const getAllTodos: RequestHandler = async (req, res) => {
   }
 };
 
-export const getTodoById: RequestHandler = async (req, res) => {
-  const todoId = req.params.id;
+export const getTodoByUserId: RequestHandler = async (req, res) => {
   try {
-    const [todo]: any = await db
+    const user_id = req.params.user_id;
+    const [todos] = await db
       .promise()
-      .query("SELECT * FROM Todos WHERE todo_id = ?", [todoId]);
+      .query<ITodoByUserId[]>(
+        "SELECT * FROM Todos WHERE user_id = ? ORDER BY timestamp DESC",
+        user_id
+      );
     if (todo.length === 0) {
       return res.status(404).json({ message: "Todo not found" });
     }
-    res.status(200).json({ todo: todo[0] });
+    res.status(200).json({ todo: todos, user_id: user_id });
   } catch (error) {
-    console.error(`Error fetching task by ID ${todoId}:`, error);
-    res.status(500).json({ message: " Server Error" });
+    console.error(`Error fetching task by ID :`, error);
+    res.status(500).json({ message: " ky esht" });
   }
 };
 
 export const createTodo: RequestHandler = async (req, res) => {
-  console.log(req.body);
+  const user_id = req.params.user_id;
+  const todo_name = req.body[0];
+  const description = req.body[1];
+  const priority = req.body[2];
+  if (todo_name.length === 0 && description.length === 0) {
+    console.error(
+      "Todo Name , Todo Description or Priority might be emty, Please fill up the textfields."
+    );
+    return;
+  }
   try {
     const [newTodo] = await db
       .promise()
-      .query(
-        "INSERT INTO Todos (user_id, task_name, description) VALUES (?,?,?)",
-        [req.body.user_id, req.body.todo_name, req.body.description]
+      .query<CreateTodo[]>(
+        "INSERT INTO Todos (task_name, description,priority, user_id) VALUES (?,?,?,?)",
+        [todo_name, description, priority, user_id]
       );
     res
       .status(201)
@@ -48,28 +67,37 @@ export const createTodo: RequestHandler = async (req, res) => {
 
 export const updateTodo: RequestHandler = async (req, res) => {
   const todo_id = req.params.todo_id;
-  console.log(todo_id);
   if (!todo_id) {
     return res.status(400).json({ message: "Invalid todo ID" });
   }
   try {
-    const todo_name = req.body.todo_name;
-    const description = req.body.description;
-    console.log(todo_name, description);
-    const [updatedTodo]: any = await db
+    const todo_name = req.body[0];
+    const description = req.body[1];
+    if (todo_name.length === 0 && description.length === 0) {
+      console.error(
+        "Todo Name , Todo Description or Priority might be emty, Please fill up the textfields."
+      );
+      return;
+    }
+    const [updatedTodo] = await db
       .promise()
-      .query("UPDATE Todos SET task_name = ?, description = ?", [
-        todo_name,
-        description,
-      ]);
+      .query<UpdateTodo[]>(
+        "UPDATE Todos SET task_name = ?, description = ? WHERE todo_id = ?",
+        [todo_name, description, todo_id]
+      );
 
-    if (updatedTodo.affectedRows === 0) {
+    const jsonString = JSON.stringify(updatedTodo);
+
+    const jsonParse = JSON.parse(jsonString);
+
+    if (jsonParse.affectedRows === 0) {
       return res.status(404).json({ message: "Todo not found" });
     }
 
-    res
-      .status(200)
-      .json({ message: "Todo updated successfully", todo: updatedTodo });
+    res.status(200).json({
+      message: "Todo updated successfully",
+      todo: updatedTodo,
+    });
   } catch (error) {
     console.error(`Error updating todo by ID ${todo_id}:`, error);
     res.status(500).json({ message: " Server Error" });
@@ -78,12 +106,16 @@ export const updateTodo: RequestHandler = async (req, res) => {
 
 export const deleteTodo: RequestHandler = async (req, res) => {
   const todo_id = req.params.todo_id;
-  console.log(todo_id);
   try {
-    const [deletedTodo]: any = await db
+    const [deletedTodo] = await db
       .promise()
-      .query("DELETE FROM Todos WHERE todo_id = ?", todo_id);
-    if (deletedTodo.affectedRows === 0) {
+      .query<DeleteTodo[]>("DELETE FROM Todos WHERE todo_id = ?", todo_id);
+
+    const jsonString = JSON.stringify(deletedTodo);
+
+    const jsonParse = JSON.parse(jsonString);
+
+    if (jsonParse.affectedRows === 0) {
       return res.status(404).json({ message: "Todo not found" });
     }
     res

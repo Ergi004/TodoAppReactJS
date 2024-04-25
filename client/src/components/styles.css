@@ -1,3 +1,17 @@
 .sign-in-btn:hover {
     background: #765827 !important;
 }
+
+.edit-btn {
+    color: #d7d7d8 !important;
+    background-color: #346ecd !important;
+    padding: 10px !important;
+    margin: 5px 10px !important;
+}
+
+.delete-btn {
+    color: #d7d7d8 !important;
+    background-color: #A73121 !important;
+    padding: 10px !important;
+    margin: 5px 10px !important;
+}

@@ -3,12 +3,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.authenticated = exports.authLogout = exports.authLogin = exports.authRegister = void 0;
+exports.authenticated = exports.authLogout = exports.currentUser = exports.authLogin = exports.authRegister = void 0;
 const db_1 = __importDefault(require("../config/db"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const authRegister = async (req, res) => {
     try {
         const { user_name, email, password } = req.body;
+        console.log(req.body);
         const [existingUser] = await db_1.default
             .promise()
             .query("SELECT * FROM User WHERE email = ?", [email]);
@@ -18,6 +19,7 @@ const authRegister = async (req, res) => {
         const [newUser] = await db_1.default
             .promise()
             .query("INSERT INTO User (user_name , email, password) VALUES (?, ?, ?)", [user_name, email, password]);
+        const user_id = newUser.insertId;
         res
             .status(201)
             .json({ message: "User registration successful", user: newUser });
@@ -33,10 +35,7 @@ const authLogin = async (req, res) => {
         const { email, password } = req.body;
         const [user] = await db_1.default
             .promise()
-            .query("SELECT * FROM User WHERE email = ? AND password = ?", [
-            email,
-            password,
-        ]);
+            .query("SELECT * FROM User WHERE email = ? AND password = ?", [email, password]);
         if (!user.length) {
             return res.status(401).json({ message: "Invalid Credentials" });
         }
@@ -45,8 +44,10 @@ const authLogin = async (req, res) => {
             expiresIn: "1h",
         });
         // setting cookie
-        res.cookie("token", token, { httpOnly: true });
-        res.status(200).json({ message: "Login Successful!", user: user[0] });
+        res.cookie("token", token);
+        res
+            .status(200)
+            .json({ message: "Login Successful!", user: user[0], token });
     }
     catch (error) {
         console.error("Error during login:", error);
@@ -54,12 +55,18 @@ const authLogin = async (req, res) => {
     }
 };
 exports.authLogin = authLogin;
+const currentUser = async (req, res) => {
+    try {
+    }
+    catch (error) { }
+};
+exports.currentUser = currentUser;
 const authLogout = async (req, res) => {
     res.clearCookie("token");
     res.status(200).json({ messge: "Logout succsessful!" });
 };
 exports.authLogout = authLogout;
 const authenticated = (req, res) => {
-    res.status(200).json({ user: req.user_id });
+    res.status(200).json({ user: req.body.user_id });
 };
 exports.authenticated = authenticated;

@@ -1,4 +1,5 @@
 import * as React from "react";
+import { useEffect, useState } from "react";
 import Button from "@mui/material/Button";
 import CssBaseline from "@mui/material/CssBaseline";
 import TextField from "@mui/material/TextField";
@@ -11,7 +12,7 @@ import "../components/styles.css";
 import IconButton from "@mui/material/IconButton";
 import MenuIcon from "@mui/icons-material/Menu";
 import Toolbar from "@mui/material/Toolbar";
-import MuiAppBar, { AppBarProps as MuiAppBarProps } from "@mui/material/AppBar";
+import MuiAppBar from "@mui/material/AppBar";
 import MuiDrawer from "@mui/material/Drawer";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import Divider from "@mui/material/Divider";
@@ -19,17 +20,16 @@ import List from "@mui/material/List";
 import { mainListItems, secondaryListItems } from "./listItems";
 import Logout from "./Logout";
 import AddIcon from "@mui/icons-material/Add";
-import Checkbox from "@mui/material/Checkbox";
 import FormControlLabel from "@mui/material/FormControlLabel";
-import RadioButtonCheckedIcon from "@mui/icons-material/RadioButtonChecked";
-import RadioButtonUncheckedIcon from "@mui/icons-material/RadioButtonUnchecked";
-import TodosForm from "./TodosForm";
+import TodoList from "./TodoList";
+import { AppBarProps } from "../models/models";
+import FormControl from "@mui/material/FormControl";
+import Radio from "@mui/material/Radio";
+import FormLabel from "@mui/material/FormLabel";
+import RadioGroup from "@mui/material/RadioGroup";
+import TodoApi from "../api/todosApi";
 // TODO remove, this demo shouldn't need to reset the theme.
 const drawerWidth: number = 240;
-
-interface AppBarProps extends MuiAppBarProps {
-  open?: boolean;
-}
 
 const AppBar = styled(MuiAppBar, {
   shouldForwardProp: (prop: string) => prop !== "open",
@@ -78,8 +78,55 @@ const Drawer = styled(MuiDrawer, {
 // TODO remove, this demo shouldn't need to reset the theme.
 const defaultTheme = createTheme();
 
+interface ITodo {
+  todo_id?: number;
+  task_name?: string;
+  description?: string;
+  timestamp?: any;
+  priority?: string;
+}
+
 export default function Dashboard() {
-  const [open, setOpen] = React.useState(true);
+  const [open, setOpen] = useState(false);
+  const [todoName, setTodoName] = useState<string | any>("");
+  const [description, setDesctription] = useState<string | any>("");
+  const [todos, setTodos] = useState<ITodo[]>([]);
+  const [selectedPriority, setSelectedPriority] = useState("Later");
+
+  const handlePriorityChange = (e: any) => {
+    setSelectedPriority(e.target.value);
+  };
+
+  const createTodo = async () => {
+    const user_id = localStorage.getItem("user_id");
+    await TodoApi.createTodo(user_id, todoName, description, selectedPriority);
+    getTodosByUsrId();
+  };
+
+  const getTodosByUsrId = async () => {
+    const user_id = localStorage.getItem("user_id");
+    const todos = await TodoApi.getTodoByUserId(user_id);
+    setTodos(todos.data.todo);
+  };
+  const handleUpdate = async (
+    todo_id: number,
+    todoName: string,
+    description: string
+  ) => {
+    await TodoApi.updateTodo(todo_id, todoName, description);
+    getTodosByUsrId();
+  };
+
+  useEffect(() => {
+    getTodosByUsrId();
+  }, []);
+
+  const handleDelete = (todo_id: number) => {
+    TodoApi.deleteTodo(todo_id);
+    const newTodos = todos.filter((todo) => todo.todo_id !== todo_id);
+    setTodos(newTodos);
+  };
+
   const toggleDrawer = () => {
     setOpen(!open);
   };
@@ -114,7 +161,7 @@ export default function Dashboard() {
               noWrap
               sx={{ flexGrow: 1 }}
             >
-              Welcome to TodoApp
+              Welcome to
             </Typography>
             <Logout />
           </Toolbar>
@@ -161,6 +208,9 @@ export default function Dashboard() {
               display: "flex",
               flexDirection: "column",
             }}
+            component="form"
+            noValidate
+            onSubmit={createTodo}
           >
             <Typography
               sx={{
@@ -171,30 +221,28 @@ export default function Dashboard() {
             >
               Here you can asign your Todos
             </Typography>
-            <Box
-              component="form"
-              noValidate
-              sx={{ mt: 10, display: "flex", flexDirection: "column" }}
-            >
-              <TextField
-                sx={{ margin: "5px auto", maxWidth: "800px" }}
-                aria-required
-                required
-                fullWidth
-                label="Task Name"
-                type="text"
-                autoComplete="current-password"
-              />
-              <TextField
-                sx={{ margin: "5px auto", maxWidth: "800px" }}
-                aria-required
-                required
-                fullWidth
-                label="Task Description"
-                type="text"
-                autoComplete="current-password"
-              />
-            </Box>
+            <TextField
+              sx={{ margin: "5px auto", maxWidth: "800px" }}
+              aria-required
+              required
+              fullWidth
+              label="Todo Name"
+              type="text"
+              onChange={(e) => setTodoName(e.target.value)}
+              value={todoName}
+              autoFocus
+            />
+            <TextField
+              sx={{ margin: "5px auto", maxWidth: "800px" }}
+              aria-required
+              required
+              fullWidth
+              label="Todo Description"
+              type="text"
+              onChange={(e) => setDesctription(e.target.value)}
+              value={description}
+              autoFocus
+            />
             <Box
               sx={{
                 display: "flex",
@@ -208,85 +256,70 @@ export default function Dashboard() {
                   alignItems: "center",
                   padding: "5px 25px",
                   margin: "0 10px",
-                  bgcolor: "#C3EDC0",
                   borderRadius: "7px",
                 }}
               >
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      checkedIcon={<RadioButtonCheckedIcon />}
-                      icon={<RadioButtonUncheckedIcon />}
+                <FormControl>
+                  <FormLabel>Priotity</FormLabel>
+                  <RadioGroup
+                    sx={{ justifyContent: "space-between" }}
+                    row
+                    aria-labelledby="demo-row-radio-buttons-group-label"
+                    name="row-radio-buttons-group"
+                    defaultValue="Later"
+                    value={selectedPriority}
+                    onChange={handlePriorityChange}
+                  >
+                    <FormControlLabel
+                      sx={{
+                        padding: "10px 30px",
+                        bgcolor: "#B4B4B8",
+                        borderRadius: "7px",
+                        margin: "5px",
+                      }}
+                      value="Later"
+                      control={<Radio />}
+                      label="Later"
                     />
-                  }
-                  label="Later"
-                />{" "}
-              </Box>
-              <Box
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  padding: "5px 25px",
-                  margin: "0 10px",
-                  bgcolor: "#64CCDA",
-                  borderRadius: "7px",
-                }}
-              >
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      checkedIcon={<RadioButtonCheckedIcon />}
-                      icon={<RadioButtonUncheckedIcon />}
+                    <FormControlLabel
+                      sx={{
+                        padding: "10px 30px",
+                        bgcolor: "#008DDA",
+                        borderRadius: "7px",
+                        margin: "5px",
+                      }}
+                      value="Normal"
+                      control={<Radio />}
+                      label="Normal"
                     />
-                  }
-                  label="Normal"
-                />
-              </Box>
-              <Box
-              
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  padding: "5px 25px",
-                  margin: "0 10px",
-                  bgcolor: "#FFAF45",
-                  borderRadius: "7px",
-                }}
-                
-              >
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      checkedIcon={<RadioButtonCheckedIcon />}
-                      icon={<RadioButtonUncheckedIcon />}
+                    <FormControlLabel
+                      sx={{
+                        padding: "10px 30px",
+                        bgcolor: "#FDA403",
+                        borderRadius: "7px",
+                        margin: "5px",
+                      }}
+                      value="Important"
+                      control={<Radio />}
+                      label="Important"
                     />
-                  }
-                  label="Important"
-                />{" "}
-              </Box>
-              <Box
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  padding: "5px 25px",
-                  margin: "0 10px",
-                  bgcolor: "#E72929",
-                  borderRadius: "7px",
-                }}
-              >
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      checkedIcon={<RadioButtonCheckedIcon />}
-                      icon={<RadioButtonUncheckedIcon />}
+                    <FormControlLabel
+                      sx={{
+                        padding: "10px 30px",
+                        bgcolor: "#E72929",
+                        borderRadius: "7px",
+                        margin: "5px",
+                      }}
+                      value="Urgent"
+                      control={<Radio />}
+                      label="Urgent"
                     />
-                  }
-                  label="Urgent"
-                />{" "}
+                  </RadioGroup>
+                </FormControl>
               </Box>
             </Box>
             <Button
-              type="submit"
+              onClick={() => createTodo()}
               fullWidth
               variant="contained"
               sx={{
@@ -300,7 +333,11 @@ export default function Dashboard() {
               <AddIcon sx={{ marginLeft: "15px" }} />
             </Button>
             <Box>
-              <TodosForm />
+              <TodoList
+                handleUpdate={handleUpdate}
+                handleDelete={handleDelete}
+                todos={todos}
+              />
             </Box>
           </Box>
         </Grid>

@@ -1,9 +1,10 @@
 import Axios from "./axios";
+import { IUserData } from "../models/models";
 
 const Api: any = {
   register: async (user_name: string, email: string, password: string) => {
     try {
-      const response: any = await Axios.post("/auth/register", {
+      const response = await Axios.post<IUserData[]>("/auth/register", {
         user_name: user_name,
         email: email,
         password: password,
@@ -13,12 +14,12 @@ const Api: any = {
       throw error.response ? error.response.data.message : "Api Error";
     }
   },
-  login: async (email: string, password: string) => {
+  login: async (email: string, password: string, todos: object) => {
     try {
-      const response = await Axios.post(
-        "/auth/login",
-        { email: email, password: password }
-      );
+      const response = await Axios.post("/auth/login", {
+        email: email,
+        password: password,
+      });
       return response.data;
     } catch (error: any) {
       throw error.response ? error.response.data.message : "Api Error";

@@ -10,7 +10,6 @@ const Logout = () => {
       await Api.logout();
       localStorage.removeItem("token");
       navigate("/");
-      window.location.reload();
     } catch (error) {
       console.error("Logout failed:", error);
     }

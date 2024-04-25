@@ -50,12 +50,13 @@ export default function Login() {
     e.preventDefault();
     try {
       const response = await Api.login(email, password);
-      const token =  response.token;
+      const token = response.token;
 
       localStorage.setItem("token", token);
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      localStorage.setItem("user_id", response.user.user_id)
+      axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+
       navigate("/account");
-      window.location.reload();
     } catch (error) {
       console.error("Error during login:", error);
     }

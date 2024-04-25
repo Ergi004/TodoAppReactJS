@@ -1,36 +1,52 @@
 import Axios from "./axios";
 
-const todoApi: any = {
-  getAllTodos: async (allTodos: any) => {
+const TodoApi: any = {
+  getAllTodos: async (allTodos: object) => {
     try {
-      const response: any = Axios.get("/todos/get", allTodos);
-      return response.data
+      const response = await Axios.get("/todos/get", allTodos);
+      return response.data;
     } catch (error: any) {
       console.error("Getting all todos failed:", error);
       throw error.response ? error.response.data.message : "Api Error";
     }
   },
+  getTodoByUserId: async (user_id: number) => {
+    try {
+      const response = await Axios.get(`/todos/get/user/${user_id}`);
+      return response;
+    } catch (error: any) {
+      console.error("Getting  todos by user ID failed:", error);
+      throw error.response ? error.response.data.message : "Api Error";
+    }
+  },
 
   createTodo: async (
+    user_id: number,
     todo_name: string,
     description: string,
-    user_id: number
+    priority: string
   ) => {
     try {
-      const response: any = Axios.post("/todos/create", [
+      const response = await Axios.post(`/todos/create/${user_id}`, [
         todo_name,
         description,
-        user_id,
+        priority,
       ]);
-      return response.data;
+      
+      return response;
     } catch (error: any) {
       console.error("Creating todo failed:", error);
       throw error.response ? error.response.data.message : "Api Error";
     }
   },
-  updateTodo: async (todo_name: string, description: string) => {
+  updateTodo: async (
+    todo_id: number,
+    todo_name: string,
+    description: string,
+    priority: string
+  ) => {
     try {
-      const response: any = Axios.put("/todos/update/:todo_id", [
+      const response = await Axios.put(`/todos/update/${todo_id}`, [
         todo_name,
         description,
       ]);
@@ -40,9 +56,9 @@ const todoApi: any = {
       throw error.response ? error.response.data.message : "Api Error";
     }
   },
-  deleteTodo: async (todo_id: any) => {
+  deleteTodo: async (todo_id: number) => {
     try {
-      const response: any = Axios.delete("/todos/delete/:todo_id", todo_id);
+      const response = await Axios.delete(`/todos/delete/${todo_id}`);
       return response.data;
     } catch (error: any) {
       console.error("Deleting todo failed:", error);
@@ -51,4 +67,4 @@ const todoApi: any = {
   },
 };
 
-export default todoApi;
+export default TodoApi;
