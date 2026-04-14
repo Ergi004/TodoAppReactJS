@@ -1,6 +1,6 @@
 CREATE DATABASE IF NOT EXISTS TodoApp;
-CREATE USER IF NOT EXISTS "Ergi"@"localhost" IDENTIFIED BY "1234";
-GRANT ALL PRIVILEGES ON TodoApp.* TO "Ergi"@"localhost";
+CREATE USER IF NOT EXISTS "root"@"localhost" IDENTIFIED BY "1234";
+GRANT ALL PRIVILEGES ON TodoApp.* TO "root"@"localhost";
 
 USE TodoApp;
 

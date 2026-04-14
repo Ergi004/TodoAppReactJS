@@ -1,6 +1,3 @@
-import * as React from "react";
-import { ITodoByUserId } from "../models/models";
-import Todo from "./Todo";
 import {
   Paper,
   Table,
@@ -10,68 +7,42 @@ import {
   TableHead,
   TableRow,
 } from "@mui/material";
-import { useState } from "react";
+import { ITodo } from "../models/models";
+import Todo from "./Todo";
 
 interface TodoListProps {
-  todos: ITodoByUserId[];
+  todos: ITodo[];
   handleDelete: (todo_id: number) => void;
-  handleUpdate: (
-    todo_id: number,
-    todoName: string,
-    description: string
-  ) => void;
+  handleUpdate: (todo: ITodo) => void;
 }
 
-const TodosForm: React.FC<TodoListProps> = ({
-  todos,
-  handleDelete,
-  handleUpdate,
-}) => {
+const TodoList = ({ todos, handleDelete, handleUpdate }: TodoListProps) => {
   return (
     <TableContainer
       component={Paper}
       sx={{
-        display: "flex",
-        flexDirection: "column",
+        borderRadius: "8px",
+        overflow: "hidden",
+        border: "1px solid rgba(140,90,55,0.12)",
+        boxShadow: "0 18px 50px rgba(82,53,33,0.08)",
       }}
     >
-      <Table sx={{ minWidth: 600 }} size="small" aria-label="a dense table">
+      <Table sx={{ minWidth: 1200 }} size="small" aria-label="todo table">
         <TableHead>
-          <TableRow>
-            <TableCell
-              sx={{ fontSize: "18px", fontWeight: "bold" }}
-              align="center"
-            >
+          <TableRow sx={{ backgroundColor: "rgba(199,156,108,0.12)" }}>
+            <TableCell align="center" sx={{ fontWeight: 700 }}>
               Priority
             </TableCell>
-            <TableCell
-              sx={{ fontSize: "18px", fontWeight: "bold" }}
-              align="center"
-            >
-              Todo Id
+            <TableCell align="center" sx={{ fontWeight: 700 }}>
+              Task
             </TableCell>
-            <TableCell
-              sx={{ fontSize: "18px", fontWeight: "bold" }}
-              align="center"
-            >
-              Todo Name
+            <TableCell align="center" sx={{ fontWeight: 700 }}>
+              Description
             </TableCell>
-            <TableCell
-              sx={{ fontSize: "18px", fontWeight: "bold" }}
-              align="center"
-            >
-              Todo descritpion
+            <TableCell align="center" sx={{ fontWeight: 700 }}>
+              Created
             </TableCell>
-            <TableCell
-              sx={{ fontSize: "18px", fontWeight: "bold" }}
-              align="center"
-            >
-              Time Stamp
-            </TableCell>
-            <TableCell
-              sx={{ fontSize: "18px", fontWeight: "bold" }}
-              align="center"
-            >
+            <TableCell align="center" sx={{ fontWeight: 700 }}>
               Actions
             </TableCell>
           </TableRow>
@@ -79,10 +50,10 @@ const TodosForm: React.FC<TodoListProps> = ({
         <TableBody>
           {todos.map((todo) => (
             <Todo
-              handleUpdate={handleUpdate}
-              handleDelete={handleDelete}
               key={todo.todo_id}
               todo={todo}
+              handleDelete={handleDelete}
+              handleUpdate={handleUpdate}
             />
           ))}
         </TableBody>
@@ -91,4 +62,4 @@ const TodosForm: React.FC<TodoListProps> = ({
   );
 };
 
-export default TodosForm;
+export default TodoList;

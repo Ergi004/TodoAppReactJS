@@ -1,74 +1,124 @@
 import { RequestHandler } from "express";
-import { User, ExistingUser } from "../models/models";
-import db from "../config/db";
 import jwt from "jsonwebtoken";
+import db from "../config/db";
+import { AuthBody, MutationResult, UserRow } from "../models/models";
+
+const TOKEN_SECRET = "secret-key";
 
 export const authRegister: RequestHandler = async (req, res) => {
+  const { user_name, email, password } = req.body as AuthBody;
+
+  if (!user_name?.trim() || !email?.trim() || !password?.trim()) {
+    return res.status(400).json({ message: "All fields are required" });
+  }
+
   try {
-    const { user_name, email, password }: User = req.body;
-    console.log(req.body);
-    const [existingUser] = await db
-      .promise()
-      .query<ExistingUser[]>("SELECT * FROM User WHERE email = ?", [email]);
-    if (existingUser.length > 0) {
+    const [existingUsers] = await db.promise().query<UserRow[]>(
+      "SELECT * FROM User WHERE email = ?",
+      [email.trim()]
+    );
+
+    if (existingUsers.length > 0) {
       return res.status(400).json({ message: "User already exists" });
     }
-    const [newUser]: any = await db
-      .promise()
-      .query(
-        "INSERT INTO User (user_name , email, password) VALUES (?, ?, ?)",
-        [user_name, email, password]
-      );
 
-      const user_id = newUser.insertId
-    res
-      .status(201)
-      .json({ message: "User registration successful", user: newUser });
+    const [result] = await db.promise().query<MutationResult>(
+      "INSERT INTO User (user_name, email, password) VALUES (?, ?, ?)",
+      [user_name.trim(), email.trim(), password.trim()]
+    );
+
+    res.status(201).json({
+      message: "User registration successful",
+      user: {
+        user_id: result.insertId,
+        user_name: user_name.trim(),
+        email: email.trim(),
+      },
+    });
   } catch (error) {
     console.error("Error registering user:", error);
-    res.status(500).json({ message: "Server Error" });
+    res.status(500).json({ message: "Server error" });
   }
 };
 
 export const authLogin: RequestHandler = async (req, res) => {
+  const { email, password } = req.body as AuthBody;
+
+  if (!email?.trim() || !password?.trim()) {
+    return res.status(400).json({ message: "Email and password are required" });
+  }
+
   try {
-    const { email, password }: User = req.body;
-    const [user] = await db
-      .promise()
-      .query<ExistingUser[]>(
-        "SELECT * FROM User WHERE email = ? AND password = ?",
-        [email, password]
-      );
-    if (!user.length) {
-      return res.status(401).json({ message: "Invalid Credentials" });
+    const [users] = await db.promise().query<UserRow[]>(
+      "SELECT * FROM User WHERE email = ? AND password = ?",
+      [email.trim(), password.trim()]
+    );
+
+    if (users.length === 0) {
+      return res.status(401).json({ message: "Invalid credentials" });
     }
-    // generating token
-    const token = jwt.sign({ user_id: user[0].user_id }, "secret-key", {
+
+    const currentUser = users[0];
+    const token = jwt.sign({ user_id: currentUser.user_id }, TOKEN_SECRET, {
       expiresIn: "1h",
     });
 
-    // setting cookie
-    res.cookie("token", token);
+    res.cookie("token", token, {
+      httpOnly: true,
+      sameSite: "lax",
+    });
 
-    res
-      .status(200)
-      .json({ message: "Login Successful!", user: user[0], token });
+    res.status(200).json({
+      message: "Login successful",
+      token,
+      user: {
+        user_id: currentUser.user_id,
+        user_name: currentUser.user_name,
+        email: currentUser.email,
+      },
+    });
   } catch (error) {
     console.error("Error during login:", error);
     res.status(500).json({ message: "Internal server error" });
   }
 };
 
-export const currentUser: RequestHandler = async (req, res) => {
+export const currentUser: RequestHandler = async (req: any, res) => {
+  const userId = req.user?.user_id;
+
+  if (!userId) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+
   try {
-  } catch (error) {}
+    const [users] = await db.promise().query<UserRow[]>(
+      "SELECT user_id, user_name, email, password FROM User WHERE user_id = ?",
+      [userId]
+    );
+
+    if (users.length === 0) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const user = users[0];
+    res.status(200).json({
+      user: {
+        user_id: user.user_id,
+        user_name: user.user_name,
+        email: user.email,
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching current user:", error);
+    res.status(500).json({ message: "Server error" });
+  }
 };
 
-export const authLogout: RequestHandler = async (req, res) => {
+export const authLogout: RequestHandler = async (_req, res) => {
   res.clearCookie("token");
-  res.status(200).json({ messge: "Logout succsessful!" });
+  res.status(200).json({ message: "Logout successful" });
 };
 
-export const authenticated: RequestHandler = (req, res) => {
-  res.status(200).json({ user: req.body.user_id });
+export const authenticated: RequestHandler = (req: any, res) => {
+  res.status(200).json({ user: req.user });
 };

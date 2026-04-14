@@ -1,18 +1,19 @@
 import { Router } from "express";
 import {
-  authRegister,
   authLogin,
   authLogout,
+  authRegister,
   authenticated,
-  currentUser
+  currentUser,
 } from "../controllers/authController";
 import verifyToken from "../middleware/authMiddleware";
 
 const router = Router();
-router.get('/currentUser', currentUser)
+
+router.get("/current-user", verifyToken, currentUser);
+router.get("/authenticated", verifyToken, authenticated);
 router.post("/register", authRegister);
 router.post("/login", authLogin);
 router.post("/logout", authLogout);
-router.get("/auth", verifyToken, authenticated);
 
 export default router;

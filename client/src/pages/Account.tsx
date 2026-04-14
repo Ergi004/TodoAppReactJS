@@ -1,8 +1,8 @@
-import React, { useEffect } from "react";
-import AddTodoForm from "../components/AddTodoForm";
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import AddTodoForm from "../components/AddTodoForm";
 
-const AuthGuard = ({ children }: any) => {
+const AuthGuard = ({ children }: { children: React.ReactNode }) => {
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -14,13 +14,10 @@ const AuthGuard = ({ children }: any) => {
   return <>{children}</>;
 };
 
-const Dashboard: React.FC = () => {
-  
+const Dashboard = () => {
   return (
     <AuthGuard>
-      <div>
-        <AddTodoForm />
-      </div>
+      <AddTodoForm />
     </AuthGuard>
   );
 };

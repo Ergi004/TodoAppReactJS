@@ -1,17 +1,27 @@
 .sign-in-btn:hover {
-    background: #765827 !important;
+  background: #6f4325 !important;
 }
 
 .edit-btn {
-    color: #d7d7d8 !important;
-    background-color: #346ecd !important;
-    padding: 10px !important;
-    margin: 5px 10px !important;
+  color: #f5efe7 !important;
+  background-color: #346ecd !important;
+  padding: 10px !important;
+  margin: 5px 8px !important;
+  min-width: 44px !important;
+}
+
+.edit-btn:hover {
+  background-color: #295ea8 !important;
 }
 
 .delete-btn {
-    color: #d7d7d8 !important;
-    background-color: #A73121 !important;
-    padding: 10px !important;
-    margin: 5px 10px !important;
+  color: #f5efe7 !important;
+  background-color: #a73121 !important;
+  padding: 10px !important;
+  margin: 5px 8px !important;
+  min-width: 44px !important;
+}
+
+.delete-btn:hover {
+  background-color: #862719 !important;
 }

@@ -1,164 +1,156 @@
-import * as React from "react";
+import { useMemo, useState } from "react";
 import Avatar from "@mui/material/Avatar";
+import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import CssBaseline from "@mui/material/CssBaseline";
-import TextField from "@mui/material/TextField";
-import FormControlLabel from "@mui/material/FormControlLabel";
-import Checkbox from "@mui/material/Checkbox";
+import Grid from "@mui/material/Grid";
 import Link from "@mui/material/Link";
 import Paper from "@mui/material/Paper";
-import Box from "@mui/material/Box";
-import Grid from "@mui/material/Grid";
-import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
+import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
+import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
+import Alert from "@mui/material/Alert";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
-import "../components/styles.css";
-import Api from "../api/authApi";
-import { useState } from "react";
+import { Link as RouterLink, useNavigate } from "react-router-dom";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import Api from "../api/authApi";
 
-// import { useNavigate } from "react-router-dom";
+const theme = createTheme({
+  palette: {
+    primary: { main: "#8c5a37" },
+    background: { default: "#f4ede4" },
+  },
+  shape: { borderRadius: 8 },
+  typography: {
+    fontFamily: '"Segoe UI", "Helvetica Neue", sans-serif',
+  },
+});
 
-function Copyright(props: any) {
-  return (
-    <Typography
-      variant="body2"
-      color="text.secondary"
-      align="center"
-      {...props}
-    >
-      {"Copyright © "}
-      <Link color="inherit" href="https://mui.com/">
-        Your Website
-      </Link>{" "}
-      {new Date().getFullYear()}
-      {"."}
-    </Typography>
-  );
-}
-
-// TODO remove, this demo shouldn't need to reset the theme.
-const defaultTheme = createTheme();
+const heroStyles = {
+  backgroundImage:
+    "linear-gradient(180deg, rgba(49,31,17,0.22), rgba(49,31,17,0.5)), url(https://images.pexels.com/photos/2736499/pexels-photo-2736499.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1)",
+  backgroundRepeat: "no-repeat",
+  backgroundSize: "cover",
+  backgroundPosition: "center",
+  position: "relative",
+  "&::after": {
+    content: '""',
+    position: "absolute",
+    inset: 0,
+    background:
+      "linear-gradient(135deg, rgba(244,237,228,0.16), rgba(0,0,0,0))",
+  },
+};
 
 export default function Login() {
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const navigate = useNavigate();
+  const [error, setError] = useState("");
 
-  const handleLogin = async (e: any) => {
-    e.preventDefault();
+  const isDisabled = useMemo(
+    () => !email.trim() || !password.trim(),
+    [email, password]
+  );
+
+  const handleLogin = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setError("");
+
     try {
       const response = await Api.login(email, password);
-      const token = response.token;
 
-      localStorage.setItem("token", token);
-      localStorage.setItem("user_id", response.user.user_id)
-      axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+      if (response.token) {
+        localStorage.setItem("token", response.token);
+        axios.defaults.headers.common.Authorization = `Bearer ${response.token}`;
+      }
 
+      localStorage.setItem("user_id", String(response.user.user_id));
+      localStorage.setItem("user_name", response.user.user_name);
       navigate("/account");
-    } catch (error) {
-      console.error("Error during login:", error);
+    } catch (err: any) {
+      setError(String(err));
     }
   };
 
   return (
-    <ThemeProvider theme={defaultTheme}>
-      <Grid container component="main" sx={{ height: "100vh" }}>
+    <ThemeProvider theme={theme}>
+      <Grid container component="main" sx={{ minHeight: "100vh" }}>
         <CssBaseline />
-        <Grid
-          item
-          xs={false}
-          sm={4}
-          md={7}
-          sx={{
-            backgroundImage:
-              "url(https://images.pexels.com/photos/2736499/pexels-photo-2736499.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1)",
-            backgroundRepeat: "no-repeat",
-            backgroundColor: (t) =>
-              t.palette.mode === "light"
-                ? t.palette.grey[50]
-                : t.palette.grey[900],
-            backgroundSize: "cover",
-            backgroundPosition: "center",
-          }}
-        />
-        <Grid item xs={12} sm={8} md={5} component={Paper} elevation={6} square>
+        <Grid item xs={false} md={7} sx={heroStyles} />
+        <Grid item xs={12} md={5} component={Paper} elevation={0} square>
           <Box
             sx={{
-              my: 8,
-              mx: 4,
+              minHeight: "100%",
+              px: { xs: 4, sm: 8 },
+              py: 8,
               display: "flex",
-              flexDirection: "column",
               alignItems: "center",
+              justifyContent: "center",
+              background:
+                "radial-gradient(circle at top, rgba(199,162,120,0.2), transparent 40%), #fbf8f3",
             }}
           >
-            <Avatar sx={{ m: 1, bgcolor: "#DEAC80", marginTop: "150px" }}>
-              <LockOutlinedIcon />
-            </Avatar>
-            <Typography component="h1" variant="h5">
-              Login
-            </Typography>
-            <Box
-              component="form"
-              noValidate
-              onSubmit={handleLogin}
-              sx={{ mt: 1 }}
-            >
-              <TextField
-                aria-required
-                margin="normal"
-                required
-                fullWidth
-                onChange={(e) => setEmail(e.target.value)}
-                value={email}
-                label="Email Address"
-                name="email"
-                autoComplete="email"
-                autoFocus
-              />
-              <TextField
-                aria-required
-                margin="normal"
-                required
-                fullWidth
-                onChange={(e) => setPassword(e.target.value)}
-                value={password}
-                name="password"
-                label="Password"
-                type="password"
-                autoComplete="current-password"
-              />
-              <FormControlLabel
-                control={<Checkbox value="remember" color="primary" />}
-                label="Remember me"
-              />
-              <Button
-                type="submit"
-                fullWidth
-                variant="contained"
-                sx={{ mt: 3, mb: 2, bgcolor: "#B0926A" }}
-                className="sign-in-btn"
+            <Box sx={{ width: "100%", maxWidth: 420 }}>
+              <Avatar
+                sx={{
+                  mb: 2,
+                  bgcolor: "#c79c6c",
+                  boxShadow: "0 12px 30px rgba(140,90,55,0.2)",
+                }}
               >
-                Sign In
-              </Button>
-              <Grid container>
-                <Grid item xs>
-                  <Link sx={{ color: "#765827" }} href="" variant="body2">
-                    Forgot password?
+                <LockOutlinedIcon />
+              </Avatar>
+              <Typography variant="overline" sx={{ letterSpacing: 2.4, color: "#8c5a37" }}>
+                Daily Planner
+              </Typography>
+              <Typography component="h1" variant="h4" sx={{ fontWeight: 700, mb: 1 }}>
+                Sign in
+              </Typography>
+              <Typography sx={{ color: "rgba(56,40,26,0.75)", mb: 3 }}>
+                Keep your tasks organized with a calmer, cleaner dashboard.
+              </Typography>
+              {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+              <Box component="form" noValidate onSubmit={handleLogin}>
+                <TextField
+                  margin="normal"
+                  required
+                  fullWidth
+                  label="Email Address"
+                  name="email"
+                  autoComplete="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  autoFocus
+                />
+                <TextField
+                  margin="normal"
+                  required
+                  fullWidth
+                  name="password"
+                  label="Password"
+                  type="password"
+                  autoComplete="current-password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+                <Button
+                  type="submit"
+                  fullWidth
+                  variant="contained"
+                  disabled={isDisabled}
+                  sx={{ mt: 3, mb: 2, py: 1.5 }}
+                  className="sign-in-btn"
+                >
+                  Sign In
+                </Button>
+                <Typography sx={{ textAlign: "center", color: "rgba(56,40,26,0.75)" }}>
+                  New here?{" "}
+                  <Link component={RouterLink} to="/register" underline="hover" color="#8c5a37">
+                    Create an account
                   </Link>
-                </Grid>
-                <Grid item>
-                  <Link
-                    sx={{ color: "#765827" }}
-                    href="register"
-                    variant="body2"
-                  >
-                    {"Don't have an account? Sign Up"}
-                  </Link>
-                </Grid>
-              </Grid>
-              <Copyright sx={{ mt: 5 }} />
+                </Typography>
+              </Box>
             </Box>
           </Box>
         </Grid>

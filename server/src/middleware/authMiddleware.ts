@@ -1,19 +1,23 @@
 import { RequestHandler } from "express";
 import jwt from "jsonwebtoken";
 
-const verifyToken: RequestHandler = (req: any, res , next) => {
-  const token = req.cookies.token;
+const verifyToken: RequestHandler = (req: any, res, next) => {
+  const authHeader = req.headers.authorization;
+  const bearerToken = authHeader?.startsWith("Bearer ")
+    ? authHeader.slice(7)
+    : undefined;
+  const token = req.cookies.token || bearerToken;
 
-  if (!token) return res.status(401).json({ error: "Access denied" });
+  if (!token) {
+    return res.status(401).json({ error: "Access denied" });
+  }
+
   try {
-    const decoded: any = jwt.verify(token, "secret-key");
-    console.log("Decoded token outside middleware:", decoded);
-    req.user = {
-      user_id: decoded.user_id,
-    };
+    const decoded = jwt.verify(token, "secret-key") as { user_id: number };
+    req.user = { user_id: decoded.user_id };
     next();
   } catch (error) {
-    res.status(401).json({ error: "Invalid token" });
+    return res.status(401).json({ error: "Invalid token" });
   }
 };
 

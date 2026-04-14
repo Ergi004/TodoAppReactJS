@@ -1,38 +1,41 @@
 import { AppBarProps as MuiAppBarProps } from "@mui/material/AppBar";
 
 export interface IUserData {
-  user_name?: string;
-  email?: string;
-  password?: string;
+  user_name: string;
+  email: string;
+  password: string;
 }
 
-export interface IAllTodos {
-  allTodos: {
-    todo_id: number;
-    user_id: number;
-    task_name: string;
-    email: string;
-    password: string;
-  };
+export interface IUser {
+  user_id: number;
+  user_name: string;
+  email: string;
 }
 
-export interface ITodos {
-  todo: ITodoByUserId[];
-}
-
-export interface ITodoByUserId {
-  todo_id?: number;
-  user_id?: number;
-  task_name?: string;
-  description?: string;
-  priority?: string;
-  timestamp?: any;
+export interface IAuthResponse {
+  message: string;
+  token?: string;
+  user: IUser;
 }
 
 export interface ITodo {
-  user_id?: number;
-  todo_name?: string;
-  description?: string;
+  todo_id: number;
+  user_id: number;
+  task_name: string;
+  description: string;
+  priority: string;
+  timestamp: string;
+}
+
+export interface ITodosResponse {
+  todo: ITodo[];
+  user_id: number;
+}
+
+export interface ITodoPayload {
+  task_name: string;
+  description: string;
+  priority: string;
 }
 
 export interface AppBarProps extends MuiAppBarProps {

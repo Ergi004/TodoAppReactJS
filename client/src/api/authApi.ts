@@ -1,36 +1,37 @@
 import Axios from "./axios";
-import { IUserData } from "../models/models";
+import { IAuthResponse } from "../models/models";
 
-const Api: any = {
+const Api = {
   register: async (user_name: string, email: string, password: string) => {
     try {
-      const response = await Axios.post<IUserData[]>("/auth/register", {
-        user_name: user_name,
-        email: email,
-        password: password,
+      const response = await Axios.post<IAuthResponse>("/auth/register", {
+        user_name,
+        email,
+        password,
       });
       return response.data;
     } catch (error: any) {
-      throw error.response ? error.response.data.message : "Api Error";
+      throw error.response?.data?.message ?? "API error";
     }
   },
-  login: async (email: string, password: string, todos: object) => {
+
+  login: async (email: string, password: string) => {
     try {
-      const response = await Axios.post("/auth/login", {
-        email: email,
-        password: password,
+      const response = await Axios.post<IAuthResponse>("/auth/login", {
+        email,
+        password,
       });
       return response.data;
     } catch (error: any) {
-      throw error.response ? error.response.data.message : "Api Error";
+      throw error.response?.data?.message ?? "API error";
     }
   },
+
   logout: async () => {
     try {
       await Axios.post("/auth/logout");
     } catch (error: any) {
-      console.error("Logout failed:", error);
-      throw error.response ? error.response.data.message : "Api Error";
+      throw error.response?.data?.message ?? "API error";
     }
   },
 };

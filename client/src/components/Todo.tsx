@@ -1,157 +1,135 @@
-import React, { useState } from "react";
-import { ITodoByUserId } from "../models/models";
+import { useMemo, useState } from "react";
 import {
-  TableRow,
-  TableCell,
-  Button,
-  Modal,
   Box,
-  Typography,
+  Button,
+  Chip,
+  Modal,
+  TableCell,
+  TableRow,
   TextField,
-  FormControlLabel,
-  FormControl,
-  RadioGroup,
-  FormLabel,
+  Typography,
 } from "@mui/material";
 import EditNoteIcon from "@mui/icons-material/EditNote";
 import DeleteIcon from "@mui/icons-material/Delete";
+import { ITodo } from "../models/models";
 import "./styles.css";
-import { Radio } from "@mui/icons-material";
 
-const style = {
-  position: "absolute" as "absolute",
+const modalStyle = {
+  position: "absolute" as const,
   top: "50%",
   left: "50%",
   transform: "translate(-50%, -50%)",
-  width: 400,
-  bgcolor: "background.paper",
-  border: "2px solid #000",
-  boxShadow: 24,
+  width: "min(92vw, 520px)",
+  borderRadius: "8px",
+  bgcolor: "#fffaf5",
+  border: "1px solid rgba(140,90,55,0.18)",
+  boxShadow: "0 25px 70px rgba(53,34,21,0.2)",
   p: 4,
 };
 
 interface TodoProps {
-  todo: ITodoByUserId;
+  todo: ITodo;
   handleDelete: (todo_id: number) => void;
-  handleUpdate: (
-    todo_id: number,
-    todoName: string,
-    description: string
-  ) => void;
+  handleUpdate: (todo: ITodo) => void;
 }
-const Todo: React.FC<TodoProps> = ({ todo, handleDelete, handleUpdate }) => {
+
+const getPriorityColor = (priority: string) => {
+  switch (priority) {
+    case "Urgent":
+      return { bg: "#fde7e4", color: "#b63e2f" };
+    case "Important":
+      return { bg: "#fff2d9", color: "#b57100" };
+    case "Normal":
+      return { bg: "#e4f0ff", color: "#295ea8" };
+    default:
+      return { bg: "#ece7e2", color: "#75563b" };
+  }
+};
+
+const Todo = ({ todo, handleDelete, handleUpdate }: TodoProps) => {
   const [open, setOpen] = useState(false);
-  const handleOpen = () => setOpen(true);
-  const handleClose = () => setOpen(false);
-  const [todoName, setTodoName] = useState<string | any>(todo.task_name);
-  const [description, setDesctription] = useState<string | any>(
-    todo.description
-  );
+  const [taskName, setTaskName] = useState(todo.task_name);
+  const [description, setDescription] = useState(todo.description);
+  const [priority, setPriority] = useState(todo.priority);
 
-  const [selectedPriority, setSelectedPriority] = useState("Later");
+  const priorityStyle = useMemo(() => getPriorityColor(todo.priority), [todo.priority]);
 
-  const handlePriorityChange = (e: any) => {
-    setSelectedPriority(e.target.value);
-  };
   return (
-    <TableRow
-      sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
-      key={todo.todo_id}
-    >
-      <TableCell
-        sx={{
-          fontSize: "16px",
-          justifyContent: "center",
-          textAlign: "center",
-          alignContent: "center",
-        }}
-      >
-        {todo.priority}
+    <TableRow hover sx={{ "& td": { py: 2 } }}>
+      <TableCell align="center">
+        <Chip
+          label={todo.priority}
+          sx={{
+            bgcolor: priorityStyle.bg,
+            color: priorityStyle.color,
+            fontWeight: 700,
+          }}
+        />
       </TableCell>
-      <TableCell sx={{ fontSize: "16px" }} align="center">
-        {todo.todo_id}
-      </TableCell>
-      <TableCell sx={{ fontSize: "16px" }} align="center">
+      <TableCell align="center" sx={{ fontWeight: 600 }}>
         {todo.task_name}
       </TableCell>
-      <TableCell sx={{ fontSize: "16px" }} align="center">
+      <TableCell align="center" sx={{ color: "rgba(55,39,28,0.78)" }}>
         {todo.description}
       </TableCell>
-      <TableCell sx={{ fontSize: "16px" }} align="center">
-        {todo.timestamp}
+      <TableCell align="center" sx={{ color: "rgba(55,39,28,0.68)" }}>
+        {new Date(todo.timestamp).toLocaleString()}
       </TableCell>
       <TableCell align="center">
-        <Button onClick={handleOpen} className="edit-btn">
+        <Button onClick={() => setOpen(true)} className="edit-btn">
           <EditNoteIcon />
         </Button>
-        <div>
-          <Modal
-            open={open}
-            onClose={handleClose}
-            aria-labelledby="modal-modal-title"
-            aria-describedby="modal-modal-description"
-          >
-            <Box sx={style}>
-              <Typography
-                align="center"
-                id="modal-modal-title"
-                variant="h6"
-                component="h2"
-              >
-                Edit Todo
-              </Typography>
-              <TextField
-                sx={{ margin: "5px auto", maxWidth: "800px" }}
-                aria-required
-                required
-                fullWidth
-                label="Todo Name"
-                type="text"
-                onChange={(e) => setTodoName(e.target.value)}
-                value={todoName}
-                autoFocus
-              />
-              <TextField
-                sx={{ margin: "5px auto", maxWidth: "800px" }}
-                aria-required
-                required
-                fullWidth
-                label="Todo Description"
-                type="text"
-                onChange={(e) => setDesctription(e.target.value)}
-                value={description}
-                autoFocus
-              />
-              <Button
-                onClick={() => {
-                  handleUpdate(
-                    todo.todo_id as number,
-                    todoName as string,
-                    description as string
-                  );
-                  handleClose();
-                }}
-                fullWidth
-                variant="contained"
-                sx={{
-                  bgcolor: "#B0926A",
-                  maxWidth: "650px",
-                  margin: "20px auto",
-                }}
-                className="sign-in-btn"
-              >
-                Submit
-              </Button>
-            </Box>
-          </Modal>
-        </div>
-        <Button
-          type="submit"
-          onClick={() => handleDelete(todo.todo_id as number)}
-          className="delete-btn"
-        >
+        <Button onClick={() => handleDelete(todo.todo_id)} className="delete-btn">
           <DeleteIcon />
         </Button>
+        <Modal open={open} onClose={() => setOpen(false)}>
+          <Box sx={modalStyle}>
+            <Typography variant="h6" sx={{ mb: 1, fontWeight: 700 }}>
+              Edit Todo
+            </Typography>
+            <Typography sx={{ mb: 3, color: "rgba(55,39,28,0.72)" }}>
+              Update the text or priority without leaving the dashboard.
+            </Typography>
+            <TextField
+              fullWidth
+              label="Task Name"
+              value={taskName}
+              onChange={(e) => setTaskName(e.target.value)}
+              sx={{ mb: 2 }}
+            />
+            <TextField
+              fullWidth
+              label="Description"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              sx={{ mb: 2 }}
+            />
+            <TextField
+              fullWidth
+              label="Priority"
+              value={priority}
+              onChange={(e) => setPriority(e.target.value)}
+              helperText="Use Later, Normal, Important, or Urgent"
+            />
+            <Button
+              onClick={() => {
+                handleUpdate({
+                  ...todo,
+                  task_name: taskName,
+                  description,
+                  priority,
+                });
+                setOpen(false);
+              }}
+              fullWidth
+              variant="contained"
+              sx={{ mt: 3, py: 1.4 }}
+              className="sign-in-btn"
+            >
+              Save Changes
+            </Button>
+          </Box>
+        </Modal>
       </TableCell>
     </TableRow>
   );

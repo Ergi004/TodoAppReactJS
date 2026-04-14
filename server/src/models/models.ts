@@ -1,58 +1,31 @@
-import {
-  RowDataPacket,
-  OkPacketParams,
-  ResultSetHeader,
-  QueryResult,
-  FieldPacket,
-} from "mysql2/promise";
+import { OkPacket, ResultSetHeader, RowDataPacket } from "mysql2";
 
-export interface Todo extends RowDataPacket {
-  todo_id?: number;
-  user_id?: number;
-  todo_name?: string;
-  todo_description?: string;
-  timestamp?: string;
+export interface TodoRow extends RowDataPacket {
+  todo_id: number;
+  user_id: number;
+  task_name: string;
+  description: string;
+  priority: string;
+  timestamp: string;
 }
 
-export interface CreateTodo extends RowDataPacket {
-  task_name?: string;
-  description?: string;
-  user_id?: number;
+export interface UserRow extends RowDataPacket {
+  user_id: number;
+  user_name: string;
+  email: string;
+  password: string;
 }
 
-export interface ITodoByUserId extends RowDataPacket {
-  todo: {
-    todo_id?: number;
-    user_id?: number;
-    todo_name?: string;
-    todo_description?: string;
-  };
-}
-
-export interface UpdateTodo extends ResultSetHeader {
-  todo_id?: number;
-  user_id?: number;
-  todo_name?: string;
-  todo_description?: string;
-}
-export interface DeleteTodo extends OkPacketParams, RowDataPacket {
-  todo_id?: number;
-  user_id?: number;
-  todo_name?: string;
-  todo_description?: string;
-  affectedRows?: number;
-}
-
-export interface User {
-  userId?: number;
+export interface AuthBody {
   user_name?: string;
-  email?: string;
-  password?: string;
+  email: string;
+  password: string;
 }
 
-export interface ExistingUser extends RowDataPacket {
-  userId?: number;
-  user_name?: string;
-  email?: string;
-  password?: string;
+export interface TodoBody {
+  task_name: string;
+  description: string;
+  priority: string;
 }
+
+export type MutationResult = ResultSetHeader | OkPacket;
